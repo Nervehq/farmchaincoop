@@ -138,7 +138,7 @@ export default function FullApplicationPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 mt-1">•</span>
-                    <span>You'll receive an email at <strong>{leadData?.email}</strong> with our decision</span>
+                    <span>You'll receive an email at <strong>mailingnerve@gmail.com</strong> with our decision</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-600 mt-1">•</span>

@@ -357,12 +357,12 @@ export default function LandingPage() {
                   Our team is here to help answer any questions.
                 </p>
                 <div className="flex gap-4 justify-center">
-                  <a href="mailto:support@farmchain.coop">
+                  <a href="mailto:mailingnerve@gmail.com">
                     <Button variant="outline" size="lg">
                       Email Support
                     </Button>
                   </a>
-                  <a href="https://wa.me/2348000000000" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/+2349160426672" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="lg">
                       WhatsApp Support
                     </Button>

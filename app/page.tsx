@@ -18,9 +18,11 @@ export default function LandingPage() {
     email: '',
     phone: '',
     finance_track: 'Purchase' as 'Purchase' | 'Financing',
+    contribution_ability: '' as 'Able' | 'Unable' | '',
     annual_income: '',
     why_join: '',
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [qualificationStatus, setQualificationStatus] = useState<'idle' | 'qualified' | 'failed'>('idle');
   const [leadId, setLeadId] = useState<string>('');
@@ -35,7 +37,14 @@ export default function LandingPage() {
 
     try {
       const income = parseFloat(formData.annual_income);
-      const isEligible = income >= 1500000;
+      let isEligible = false;
+
+      // Eligibility rules
+      if (formData.finance_track === 'Purchase') {
+        isEligible = income >= 1500000;
+      } else if (formData.finance_track === 'Financing') {
+        isEligible = income >= 1500000 && formData.contribution_ability === 'Able';
+      }
 
       const { data, error } = await supabase
         .from('qualified_leads')
@@ -45,6 +54,7 @@ export default function LandingPage() {
             email: formData.email,
             phone: formData.phone,
             finance_track: formData.finance_track,
+            contribution_ability: formData.contribution_ability,
             annual_income: income,
             why_join: formData.why_join,
             application_status: isEligible ? 'Pending' : 'Ineligible',
@@ -71,6 +81,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      {/* NAVBAR */}
       <nav className="border-b bg-white/90 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <span className="text-2xl font-bold text-amber-900">Farmchain Coop</span>
@@ -121,45 +132,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* BLOCKCHAIN & MODEL SECTION */}
-      <section className="bg-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
-            Why This Model Works
-          </h2>
-          <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
-            <p className="text-xl leading-relaxed">
-              This isn’t crowdfunding. This isn’t a quick-yield investment. It’s <strong>real cattle ownership</strong> — 
-              professionally managed and powered by blockchain to ensure transparency, traceability, and fair returns.
-            </p>
-            <p className="text-xl leading-relaxed">
-              Inspired by the Arla Cooperative model, we combine proven livestock management with blockchain-backed verification, 
-              insurance coverage, and transparent income sharing.
-            </p>
-          </div>
-
-          <div className="mt-12 border-t pt-10">
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-              🔗 How Blockchain Powers the System
-            </h3>
-            <ul className="list-disc pl-6 space-y-3 text-lg text-gray-700">
-              <li>
-                Each cattle is registered on the blockchain via <strong>FarmChain</strong> as an NFT — your digital proof of ownership.
-              </li>
-              <li>
-                Every action — from feeding and veterinary care to sale — is recorded on-chain, ensuring full traceability.
-              </li>
-              <li>
-                Income distributions and performance data are automated and verifiable on the blockchain ledger.
-              </li>
-              <li>
-                This transparency builds trust and enables traceable, export-ready beef with premium market value.
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
       {/* HOW IT WORKS */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">How It Works</h2>
@@ -172,8 +144,8 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700">
-                Join the cooperative and own at least one cattle — either through outright purchase (₦500,000) 
-                or non-interest financing via our partner bank.
+                Join the cooperative and own at least one cattle — either through outright purchase
+                (<strong>₦500,000</strong>) or non-interest financing via our partner bank.
               </p>
             </CardContent>
           </Card>
@@ -213,7 +185,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* DO NOT TOUCH — Eligibility Test / Form Section */}
+      {/* ✅ ELIGIBILITY FORM */}
       <section id="eligibility-form" className="bg-gradient-to-b from-amber-50 to-white py-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
@@ -227,6 +199,7 @@ export default function LandingPage() {
             <Card className="border-2 border-amber-300 shadow-xl">
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* NAME */}
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name *</Label>
                     <Input
@@ -238,6 +211,7 @@ export default function LandingPage() {
                     />
                   </div>
 
+                  {/* EMAIL */}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address *</Label>
                     <Input
@@ -250,6 +224,7 @@ export default function LandingPage() {
                     />
                   </div>
 
+                  {/* PHONE */}
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input
@@ -262,35 +237,65 @@ export default function LandingPage() {
                     />
                   </div>
 
+                  {/* FINANCING CHOICE */}
                   <div className="space-y-2">
                     <Label>Financing Choice *</Label>
                     <RadioGroup
                       value={formData.finance_track}
                       onValueChange={(value: 'Purchase' | 'Financing') =>
-                        setFormData({ ...formData, finance_track: value })
+                        setFormData({ ...formData, finance_track: value, contribution_ability: '' })
                       }
                     >
                       <div className="flex items-center space-x-2 border rounded-lg p-4">
                         <RadioGroupItem value="Purchase" id="purchase" />
-                        <Label htmlFor="purchase" className="font-normal cursor-pointer flex-1">
-                          <div>
-                            <p className="font-semibold">Outright Purchase</p>
-                            <p className="text-sm text-gray-600">Pay full amount upfront</p>
-                          </div>
+                        <Label htmlFor="purchase" className="cursor-pointer flex-1">
+                          <p className="font-semibold">Outright Purchase</p>
+                          <p className="text-sm text-gray-600">
+                            Pay full amount upfront — <strong>₦500,000 per cattle</strong>
+                          </p>
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2 border rounded-lg p-4">
                         <RadioGroupItem value="Financing" id="financing" />
-                        <Label htmlFor="financing" className="font-normal cursor-pointer flex-1">
-                          <div>
-                            <p className="font-semibold">Non-Interest Financing</p>
-                            <p className="text-sm text-gray-600">Flexible payment plan available</p>
-                          </div>
+                        <Label htmlFor="financing" className="cursor-pointer flex-1">
+                          <p className="font-semibold">Non-Interest Financing</p>
+                          <p className="text-sm text-gray-600">Flexible payment plan available</p>
                         </Label>
                       </div>
                     </RadioGroup>
                   </div>
 
+                  {/* FINANCING SUB-OPTION */}
+                  {formData.finance_track === 'Financing' && (
+                    <div className="space-y-2 pl-4 border-l-4 border-amber-400">
+                      <Label>Ability to Contribute ₦50,000 Monthly for 12 Months *</Label>
+                      <RadioGroup
+                        value={formData.contribution_ability}
+                        onValueChange={(value: 'Able' | 'Unable') =>
+                          setFormData({ ...formData, contribution_ability: value })
+                        }
+                      >
+                        <div className="flex items-center space-x-2 border rounded-lg p-4">
+                          <RadioGroupItem value="Able" id="able" />
+                          <Label htmlFor="able" className="cursor-pointer flex-1">
+                            <p className="font-semibold text-green-700">
+                              Yes, I can contribute ₦50,000 monthly for 12 months
+                            </p>
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 border rounded-lg p-4">
+                          <RadioGroupItem value="Unable" id="unable" />
+                          <Label htmlFor="unable" className="cursor-pointer flex-1">
+                            <p className="font-semibold text-red-700">
+                              No, I currently cannot make the ₦50,000 monthly contribution
+                            </p>
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
+
+                  {/* ANNUAL INCOME */}
                   <div className="space-y-2">
                     <Label htmlFor="annual_income">Annual Income (₦) *</Label>
                     <Input
@@ -305,6 +310,7 @@ export default function LandingPage() {
                     <p className="text-sm text-gray-600">Minimum: ₦1,500,000 per year</p>
                   </div>
 
+                  {/* WHY JOIN */}
                   <div className="space-y-2">
                     <Label htmlFor="why_join">Why do you want to join Farmchain Coop? *</Label>
                     <Textarea
@@ -317,6 +323,7 @@ export default function LandingPage() {
                     />
                   </div>
 
+                  {/* SUBMIT */}
                   <Button
                     type="submit"
                     className="w-full bg-amber-600 hover:bg-amber-700 text-lg py-6"
@@ -371,91 +378,6 @@ export default function LandingPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </section>
-
-      {/* FAQ SECTION */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center">
-          Frequently Asked Questions
-        </h2>
-
-        <Accordion type="single" collapsible className="space-y-4">
-          <AccordionItem value="investment" className="border rounded-lg px-6">
-            <AccordionTrigger className="text-lg font-semibold">
-              Is this an investment or a purchase?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              This is direct ownership, not an investment. You are purchasing cattle that are registered
-              in your name. You own the asset outright, similar to buying real estate or a vehicle. The
-              dividends come from the productive use of your cattle (milk, breeding, meat).
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="insurance" className="border rounded-lg px-6">
-            <AccordionTrigger className="text-lg font-semibold">
-              Are the cattle insured?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              Yes. Every animal is covered by comprehensive livestock insurance that protects against
-              death, disease, and theft. Insurance premiums are included in the management fee.
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="management" className="border rounded-lg px-6">
-            <AccordionTrigger className="text-lg font-semibold">
-              Who manages the cattle?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              Licensed ranch operators with 15+ years of experience manage all cattle. They handle feeding,
-              veterinary care, breeding, and sales. You receive monthly reports with photos and updates.
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="returns" className="border rounded-lg px-6">
-            <AccordionTrigger className="text-lg font-semibold">
-              What returns can I expect?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              Historical data from similar cooperative ranching models shows 15-22% annual returns from
-              combined milk production, breeding fees, and eventual meat sales. Returns vary based on
-              market conditions and cattle health. Past performance doesn't guarantee future results.
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="visit" className="border rounded-lg px-6">
-            <AccordionTrigger className="text-lg font-semibold">
-              Can I visit my cattle?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              Yes! As an owner, you can schedule visits to see your cattle at the ranch. We host quarterly
-              member gatherings where you can tour the facilities and meet other members.
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="sell" className="border rounded-lg px-6">
-            <AccordionTrigger className="text-lg font-semibold">
-              Can I sell my cattle?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              Yes. You can sell your cattle at any time through our marketplace or to other members.
-              We also facilitate sales to commercial buyers when you're ready to exit.
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </section>
-
-      {/* CALL-TO-ACTION SECTION */}
-      <section className="bg-amber-600 text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-6">Secure Your Founding Membership</h2>
-          <p className="text-xl mb-8 text-amber-50">
-            Join the first 100 members and gain exclusive founding benefits including priority
-            dividend distribution and lifetime reduced management fees.
-          </p>
-          <Button onClick={scrollToForm} size="lg" className="bg-white text-amber-600 hover:bg-amber-50 text-lg px-10 py-7">
-            Check Your Eligibility Now
-          </Button>
         </div>
       </section>
 
